@@ -55,6 +55,43 @@ async function run() {
             const result = await bookCollection.updateOne(filter, updateDoc, options)
             res.json(result)
         })
+        // UPDATE SINGLE Blog Coment DETAILS
+    app.put('/books/addReview/:id', async (req, res) => {
+        const id = req.params.id;
+        const updatedBook = req.body;
+        const filter = { _id: ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $push: {
+            reviews: updatedBook
+          },
+        };
+        const addComment = await bookCollection.updateOne(filter, updateDoc, options);
+        async function calcAverageRating(ratings) {
+          let totalRatings = 0;
+          if(ratings){
+            ratings.forEach((rating, index) => {
+              totalRatings += parseInt(rating.rating);
+            });
+            const averageRating = totalRatings / ratings.length;
+    
+            return averageRating.toFixed(1);
+          } else {
+            return totalRatings;
+          }
+  
+        }
+        const book = await bookCollection.findOne(filter);
+        const avgRating = await calcAverageRating(book.reviews)
+  
+        const updateDoc2 = {
+          $set: {
+            rating: avgRating
+          },
+        };
+        const result = await bookCollection.updateOne(filter, updateDoc2, options)
+        res.json(result)
+      })
         // DELETE SINGLE BOOK DATA 
         app.delete('/books/delete/:id', async(req, res) => {
             const id = req.params.id;
